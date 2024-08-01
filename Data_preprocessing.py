@@ -6,14 +6,48 @@ import cv2
 from pytesseract import Output
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import pandas as pd
+
+
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 #이미지 생성
-img = Image.open('./Data/Toy/Invoice_original.png')
+original_img = Image.open('./Data/receipt/receipt_orginal.png')
+patient_info_path = './Data/patient_info.xlsx'
+patient_info = pd.read_excel(patient_info_path)
 
-I1 = ImageDraw.Draw(img)
-myFont = ImageFont.truetype('NanumGothic.ttf', 12)
+I_origin = ImageDraw.Draw(original_img)
+font = ImageFont.truetype('NanumGothic.ttf', 12)
 
-I1.text((334, 110), "최선호", font=myFont, fill =(0, 0, 0))
+# 이미지에 텍스트 추가하는 함수
+def add_text_to_image(image, text, position, font, color=(0, 0, 0)):
+    draw = ImageDraw.Draw(image)
+    draw.text(position, text, font=font, fill=color)
+    return image
+
+# 각 이름을 이미지에 추가
+image_list = []
+for index, row in patient_info.iterrows():
+    img = original_img.copy()
+    img = add_text_to_image(img, f"{row['Full Name']}",(340, 110) , font)
+    img = add_text_to_image(img, f"{row['Patient Number']}", (142, 110), font)
+    img = add_text_to_image(img, f"{row['Visit Date']}", (498, 110), font)
+    img = add_text_to_image(img, f"{row['Consultation Fee']}", (275, 237), font)
+    img = add_text_to_image(img, f"{row['Hospitalization Fee']}", (277, 259), font)
+    img = add_text_to_image(img, f"{row['Injection Fee']}", (277, 405), font)
+    img = add_text_to_image(img, f"{row['Test Fee']}", (277, 468), font)
+    img = add_text_to_image(img, f"{row['Total Cost']}", (810,211), font)
+    img = add_text_to_image(img, f"{row['Patient Responsibility']}", (810, 265), font)
+    image_list.append(img)
+
+# 이미지를 저장
+for i, img in enumerate(image_list):
+    img.save(f"./Data/receipt/generated/output_image_{i+1}.png")
+
+for i in range(2000):
+
+img_toy = original_img.copy()
+img_toy_gen = add_text_to_image(img_toy, patient_info(334, 110), "최선호", font=myFont, fill =(0, 0, 0))
 
 # Display edited image
 img.show()
@@ -66,3 +100,5 @@ for i in range(len(data['text'])):
         plt.text(x, y - 10, text, color='red', fontsize=12, backgroundcolor='yellow')
 
 plt.show()
+
+####################################
